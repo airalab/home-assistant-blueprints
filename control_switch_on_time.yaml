@@ -1,0 +1,75 @@
+blueprint:
+  name: Control Switch with Time
+  description: Turn on/off the switch on given time an turn it off after delay if it was turned on bu user
+  domain: automation
+  source_url: 
+  input:
+    switch_entity_state:
+      name: Switch State
+      selector:
+        entity:
+          domain: switch
+    switch_entity:
+      name: Switch
+      selector:
+        target:
+          entity:
+            domain: switch
+    start_time:
+      name: Turn on time
+      selector:
+        time:
+    end_time:
+      name: Turn off time
+      selector:
+        time:
+    delay_time:
+      name: Wait time
+      description: Time to leave the light on after last motion is detected.
+      default: 120
+      selector:
+        number:
+          min: 0
+          max: 600
+          unit_of_measurement: minutes
+
+mode: single
+
+trigger:
+- platform: state
+  entity_id: !input switch_entity_state
+  from: "off"
+  to: "on"
+  id: user_turn_on
+- platform: time
+  at: !input start_time
+  id: time_on
+- platform: time
+  at: !input end_time
+  id: time_off
+
+action:
+- if:
+  - condition: trigger
+    id: time_on
+  then:
+  - service: switch.turn_on
+    target: !input switch_entity
+  else:
+  - if:
+    - condition: trigger
+      id: time_off
+    then:
+    - service: switch.turn_off
+      target: !input switch_entity
+    else:
+    - condition: time
+      before: !input start_time
+      after: !input end_time
+    - delay: 
+        hours: 0
+        minutes: !input delay_time
+        seconds: 0
+        milliseconds: 0
+    - service: switch.turn_off
+      target: !input switch_entity
