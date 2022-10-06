@@ -25,7 +25,7 @@ blueprint:
         time:
     delay_time:
       name: Wait time
-      description: Time to leave the light on after last motion is detected.
+      description: Delay to turn off the switch if user turned on it.
       default: 120
       selector:
         number:
