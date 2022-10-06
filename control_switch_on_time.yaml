@@ -2,7 +2,7 @@ blueprint:
   name: Control Switch with Time
   description: Turn on/off the switch on given time an turn it off after delay if it was turned on bu user
   domain: automation
-  source_url: 
+  source_url: https://github.com/LoSk-p/home-assistant-blueprints/blob/main/control_switch_on_time.yaml
   input:
     switch_entity_state:
       name: Switch State
