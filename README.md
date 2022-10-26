@@ -5,6 +5,10 @@ Blueprints could be added with following:
 2. Paste github url of the needed yaml file and press `Preview Blueprint`.
 3. Read a description and press `Import Blueprint`.
 
+After you've added the blueprint press `Create Automation` near it:
+
+![blueprints](./media/blueprints.jpg)
+
 ## Turn on/off Switch on Time
 
 > Link to the file:
@@ -12,11 +16,22 @@ Blueprints could be added with following:
 > https://github.com/LoSk-p/home-assistant-blueprints/blob/main/control_switch_on_time.yaml
 > ```
 
-After you've added the blueprint press `Create Automation` near it:
+Fields description:
 
-![blueprints](./media/blueprints.jpg)
+- `Switch State` and `Switch` must be **the same entity id** of controlled switch device.
+- `Turn on time` and `Turn off time` is the time when you want tu turn on/off your switch.
+- `Wait time` is the delay to turn off the switch if it was turned on by user.
 
-Then fill nessessary fields:
+![create_blueprint](./media/create_blueprint.jpg)
+
+## Control switch with the sun
+
+> Link to the file:
+> ```
+> https://github.com/LoSk-p/home-assistant-blueprints/blob/main/sun_switch.yaml
+> ```
+
+Fields description:
 
 - `Switch State` and `Switch` must be **the same entity id** of controlled switch device.
 - `Turn on time` and `Turn off time` is the time when you want tu turn on/off your switch.

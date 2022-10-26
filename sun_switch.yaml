@@ -1,0 +1,46 @@
+blueprint:
+  name: Control switch with the sun
+  description: Turn on/off the switch on given sun elevation on sunrise and sunset.
+  domain: automation
+  source_url: https://github.com/LoSk-p/home-assistant-blueprints/blob/main/sun_switch.yaml
+  input:
+    elevation:
+      name: Sun elevation to turn on/off the light
+      description: If sun elevation above this value, automation will turn off the switch and vice versa.
+      default: -4.0
+      selector:
+        number:
+          min: -8.0
+          max: 8.0
+          unit_of_measurement: °
+          mode: slider
+          step: 0.1
+    switch_entity:
+      name: Switch
+      selector:
+        target:
+          entity:
+            domain: switch
+trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: !input elevation
+    id: sunset
+  - platform: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    above: !input elevation
+    id: sunrise
+condition: []
+action:
+- if:
+  - condition: trigger
+    id: sunrise
+  then:
+  - service: switch.turn_off
+    target: !input 'switch_entity'
+  else:
+  - service: switch.turn_on
+    target: !input 'switch_entity'
+mode: single
