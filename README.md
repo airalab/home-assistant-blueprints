@@ -14,13 +14,14 @@ After you've added the blueprint press `Create Automation` near it:
 
 ### Tested
 
+- [Telegram bot notifications](./telegram-bot-notification/README.md)
 - [Control Switch with Time](./switch-on-time/README.md)
 - [Control switch with the sun](./sun-switch/README.md)
+- [Notification if Door or Window is left open](./door-left-open/README.md)
 - Turn on/off light with motion sensor - build in to HA.
 
 ### Not tested
 
-- [Notification if Door or Window is left open](https://community.home-assistant.io/t/notification-if-door-or-window-is-left-open/402851)
 - [Alarm system integration](https://github.com/nielsfaber/alarmo)
 - [Send camera snapshot notification on motion](https://community.home-assistant.io/t/send-camera-snapshot-notification-on-motion/254565)
 - [Automatic circadian lighting](https://community.home-assistant.io/t/automatic-circadian-lighting-match-your-lights-color-temperature-to-the-sun/472105)

@@ -2,7 +2,7 @@
 
 > Link to the file:
 > ```
-> https://github.com/LoSk-p/home-assistant-blueprints/blob/main/switch-on-time/control_switch_on_time.yaml
+> https://github.com/airalab/home-assistant-blueprints/blob/main/switch-on-time/control_switch_on_time.yaml
 > ```
 
 Fields description:
