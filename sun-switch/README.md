@@ -2,7 +2,7 @@
 
 > Link to the file:
 > ```
-> https://github.com/LoSk-p/home-assistant-blueprints/blob/main/sun_switch.yaml
+> https://github.com/airalab/home-assistant-blueprints/blob/main/sun-switch/sun_switch.yaml
 > ```
 
 ![create_blueprint](./media/switch_sun.png)
