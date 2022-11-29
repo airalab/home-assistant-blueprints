@@ -18,6 +18,7 @@ After you've added the blueprint press `Create Automation` near it:
 - [Control Switch with Time](./switch-on-time/README.md)
 - [Control switch with the sun](./sun-switch/README.md)
 - [Notification if Door or Window is left open](./door-left-open/README.md)
+- [Notification if Door or Window was opened](./door-opened-notifications/README.md)
 - Turn on/off light with motion sensor - build in to HA.
 
 ### Not tested
