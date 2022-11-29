@@ -1,0 +1,50 @@
+blueprint:
+  name: Contact Sensor Open Notification
+  description: "Notifies you when a door or window was opened"
+  domain: automation
+  input:
+    entity:
+      name: Entity
+      description: The entity that will trigger the automation. This must be a binary sensor. (ie. binary_sensor.fridge)
+      selector:
+        entity:
+          domain: binary_sensor
+    friendly_name:
+      name: Device Friendly Name
+      description: What should we call the entity in the notification? (ie. Fridge)
+      default: ""
+      selector:
+        text:
+    issue_state:
+      name: Issue State
+      description: The state that triggers the automation. Because this is a binary sensor, it can only be on or off. Use the developer tools to find the correct setting.
+      default: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+    notify_service:
+      name: Notify Service
+      description: The service that will be called to deliver the notification. (ie. notify.mobile_app_my_phone)
+      default: "notify.notify"
+      selector:
+        text:
+    message:
+      name: Notification Message
+      description: The message of the notification.
+      default: "The {{friendly_name}} was opened at {{now().hour}}:{{now().minute}}:{{now().second}}."
+      selector:
+        text:
+variables:
+  friendly_name: !input friendly_name
+  entity: !input entity
+
+trigger:
+  platform: state
+  entity_id: !input entity
+  to: !input issue_state
+action:
+- service: !input notify_service
+  data:
+    message: !input message
