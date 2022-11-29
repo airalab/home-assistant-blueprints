@@ -2,7 +2,7 @@
 
 > Link to the file:
 > ```
-> https://github.com/LoSk-p/home-assistant-blueprints/blob/main/door-notifications.yaml
+> https://github.com/airalab/home-assistant-blueprints/blob/main/door-opened-notifications/door-notifications.yaml
 > ```
 
 Use this blueprint to set notification to any door or window. 
