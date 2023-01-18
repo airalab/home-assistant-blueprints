@@ -1,0 +1,66 @@
+blueprint:
+  name: Group Switch
+  description: Group two switches. They will turn on/off together.
+  domain: automation
+  source_url: https://github.com/airalab/home-assistant-blueprints/blob/main/group-switch/group_switch.yaml
+  input:
+    switch1:
+      name: Switch 1
+      selector:
+        entity:
+          domain: switch
+    switch2:
+      name: Switch 2
+      selector:
+        entity:
+          domain: switch
+    switch_target1:
+      name: Switch Target 1
+      selector:
+        target:
+          entity:
+            domain: switch
+    switch_target2:
+      name: Switch Target 1
+      selector:
+        target:
+          entity:
+            domain: switch
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+    - !input switch1
+    - !input switch2
+    to: 'on'
+    id: 'on'
+  - platform: state
+    entity_id:
+    - !input switch1
+    - !input switch2
+    to: 'off'
+    id: 'off'
+
+action:
+  - if:
+    - condition: trigger
+      id: 'on'
+    then:
+      - service: switch.turn_on
+        data: {}
+        target: !input switch_target1
+      - service: switch.turn_on
+        data: {}
+        target: !input switch_target2
+    else:
+    - if:
+      - condition: trigger
+        id: 'off'
+      then:
+      - service: switch.turn_off
+        data: {}
+        target: !input switch_target1
+      - service: switch.turn_off
+        data: {}
+        target: !input switch_target2
