@@ -1,0 +1,133 @@
+blueprint:
+  name: Climate Control
+  description: Control climate device to set given temperature
+  domain: automation
+  source_url: https://github.com/LoSk-p/home-assistant-blueprints/blob/main/climate-control/climate-control.yaml
+  input:
+    target_temp:
+      name: Target Temperature
+      default: 23
+      selector:
+        number:
+          min: 15
+          max: 30
+          unit_of_measurement: °C
+          mode: slider
+          step: 1
+    hysteresis:
+      name: Hysteresis
+      default: 1
+      selector:
+        number:
+          min: 0.0
+          max: 4.0
+          unit_of_measurement: °C
+          mode: slider
+          step: 0.1
+    temp_sensor:
+      name: Temperature Sensor
+      description: Automation will use this sensor to control climate entity
+      selector: 
+        entity:
+          domain: sensor
+          device_class: temperature
+    climate_entity:
+      name: Climate Entity
+      description: Climate entity to control
+      selector:
+        target:
+          entity:
+            domain: climate
+    climate_sensor:
+      name: Climate Sensor
+      description: Use the same entity as Climate Entity
+      selector: 
+        entity:
+          domain: climate
+
+variables:
+  target_temp: !input target_temp
+  hysteresis: !input hysteresis
+  temp_sensor: !input temp_sensor
+
+trigger:
+  - platform: state
+    entity_id: !input temp_sensor
+condition: []
+action:
+  - if:
+      - condition: state
+        entity_id: !input climate_sensor
+        state: cool
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ states( temp_sensor ) | float  > ( target_temp - hysteresis / 2 ) | float }}"
+        then:
+          - service: climate.set_hvac_mode
+            data:
+              hvac_mode: cool
+            target: !input 'climate_entity'
+        else:
+          - if:
+              - condition: template
+                value_template: "{{ states( temp_sensor ) | float < ( target_temp - hysteresis ) | float }}"
+            then:
+              - service: climate.set_hvac_mode
+                data:
+                  hvac_mode: heat
+                target: !input 'climate_entity'
+            else:
+              - service: climate.turn_off
+                data: {}
+                target: !input 'climate_entity'
+    else:
+      - if:
+          - condition: state
+            entity_id: !input climate_sensor
+            state: heat
+        then:
+          - if:
+              - condition: template
+                value_template: "{{ states( temp_sensor ) | float > ( target_temp + hysteresis ) | float }}"
+            then:
+              - service: climate.set_hvac_mode
+                data:
+                  hvac_mode: cool
+                target: !input 'climate_entity'
+            else:
+              - if:
+                  - condition: template
+                    value_template: "{{ states( temp_sensor ) | float < ( target_temp + hysteresis / 2 ) | float }}"
+                then:
+                  - service: climate.set_hvac_mode
+                    data:
+                      hvac_mode: heat
+                    target: !input 'climate_entity'
+                else:
+                  - service: climate.turn_off
+                    data: {}
+                    target: !input 'climate_entity'
+        else:
+          - if:
+              - condition: template
+                value_template: "{{ states( temp_sensor ) | float > ( target_temp + hysteresis ) | float }}"
+            then:
+              - service: climate.set_hvac_mode
+                data:
+                  hvac_mode: cool
+                target: !input 'climate_entity'
+            else:
+              - if:
+                  - condition: template
+                    value_template: "{{ states( temp_sensor ) | float < ( target_temp - hysteresis ) | float }}"
+                then:
+                  - service: climate.set_hvac_mode
+                    data:
+                      hvac_mode: heat
+                    target: !input 'climate_entity'
+                else:
+                  - service: climate.turn_off
+                    data: {}
+                    target: !input 'climate_entity'
+mode: single

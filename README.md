@@ -21,6 +21,7 @@ After you've added the blueprint press `Create Automation` near it:
 - [Notification if Door or Window was opened](./door-opened-notifications/README.md)
 - [Group Switches](./group-switch/README.md)
 - Turn on/off light with motion sensor - build in to HA.
+- [Climate control using external temperature sensor](./climate-control/README.md)
 
 ### Not tested
 
