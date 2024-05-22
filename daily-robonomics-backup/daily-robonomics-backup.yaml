@@ -1,0 +1,18 @@
+blueprint:
+  name: Daily Robonomics Backup
+  description: Create Robonomics backup every 24 hours. Robonomics Integration required!
+  domain: automation
+  source_url: https://github.com/airalab/home-assistant-blueprints/blob/main/daily-robonomics-backup/daily-robonomics-backup.yaml
+  input:
+    full_backup:
+      name: Full Backup
+      selector:
+        boolean:
+mode: single
+trigger:
+- platform: time_pattern
+  hours: '12'
+action:
+- service: robonomics.save_backup_to_robonomics
+  data:
+    full: !input full_backup
