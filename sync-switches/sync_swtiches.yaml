@@ -1,0 +1,45 @@
+blueprint:
+  name: Sync switches
+  description: Ensure a group of switches are synchronized to the ON/OFF state.
+  domain: automation
+  source_url: https://github.com/airalab/home-assistant-blueprints/blob/main/sync-switches/sync_swtiches.yaml
+  input:
+    switches:
+      name: Targets
+      description: List of switches to sync to the ON position.
+      selector:
+        target:
+          entity:
+            domain: switch
+variables:
+  var_targets: !input switches
+  
+trigger:
+    - platform: event
+      event_type: state_changed
+    
+condition:
+  - condition: template
+    value_template: "{{ trigger.event.data is defined }}"
+
+  - condition: template
+    value_template: "{{ trigger.event.data.entity_id in var_targets.entity_id }}"
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.event.data.new_state.state == 'on' }}
+        sequence:
+          - service: switch.turn_on
+            target: !input switches
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.event.data.new_state.state == 'off' }}
+        sequence:
+          - service: switch.turn_off
+            target: !input switches
+     
+mode: single

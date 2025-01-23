@@ -23,6 +23,7 @@ After you've added the blueprint press `Create Automation` near it:
 - Turn on/off light with motion sensor - build in to HA.
 - [Climate control using external temperature sensor](./climate-control/README.md)
 - [Daily Robonomics Backup](./daily-robonomics-backup/README.md)
+- [Switch Sync](./sync-switches/README.md)
 
 ### Not tested
 
