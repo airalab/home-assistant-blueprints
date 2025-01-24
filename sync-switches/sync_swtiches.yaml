@@ -36,13 +36,18 @@ action:
               {{ trigger.event.data.new_state.state == 'on' }}
         sequence:
           - service: switch.turn_on
-            target: !input switches
+            target:
+              entity_id: >
+                {{ var_targets.entity_id | reject('equalto', trigger.event.data.entity_id) | list }}
       - conditions:
           - condition: template
             value_template: >
               {{ trigger.event.data.new_state.state == 'off' }}
         sequence:
           - service: switch.turn_off
-            target: !input switches
+            target:
+              entity_id: >
+                {{ var_targets.entity_id | reject('equalto', trigger.event.data.entity_id) | list }}
+
      
 mode: single
