@@ -26,8 +26,7 @@ condition:
     value_template: "{{ trigger.event.data.entity_id in var_targets.entity_id }}"
 
   - condition: template
-    value_template: >
-      {{ trigger.event.context.parent_id is none or trigger.event.data.old_state.context.parent_id != trigger.event.data.new_state.context.parent_id }}
+    value_template: "{{ trigger.event.context.parent_id is none or trigger.event.data.old_state.context.parent_id != trigger.event.data.new_state.context.parent_id }}"
 
 action:
   - choose:
