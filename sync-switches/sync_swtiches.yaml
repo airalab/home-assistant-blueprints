@@ -10,7 +10,9 @@ blueprint:
       selector:
         target:
           entity:
-            domain: switch
+            domain: 
+              - switch
+              - light
 variables:
   var_targets: !input switches
   
