@@ -1,0 +1,72 @@
+blueprint:
+  name: "Turn on Boiler if Cloudy and Cold"
+  description: >
+    Turns on the boiler if the average cloudiness throughout the day was high AND the temperature was low.
+  domain: automation
+  input:
+    cloud_sensor:
+      name: Cloud Coverage Sensor
+      description: "Select the cloud coverage sensor (0-100%)."
+      selector:
+        entity:
+          domain: sensor
+    temp_sensor:
+      name: Temperature Sensor
+      description: "Select the temperature sensor."
+      selector:
+        entity:
+          domain: sensor
+    boiler_switch:
+      name: Boiler Switch
+      description: "Select the switch to turn on the boiler."
+      selector:
+        entity:
+          domain: switch
+    trigger_time:
+      name: Trigger Time
+      description: "Time to check conditions and turn on the boiler."
+      default: "18:00:00"
+      selector:
+        time: {}
+    cloud_threshold:
+      name: Cloudiness Threshold (%)
+      description: "Minimum average cloudiness required to turn on the boiler."
+      default: 70
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+    temp_threshold:
+      name: Temperature Threshold (°C)
+      description: "Maximum average temperature for the boiler to turn on."
+      default: 15
+      selector:
+        number:
+          min: -20
+          max: 30
+          unit_of_measurement: "°C"
+          mode: slider
+
+variables:
+  avg_cloudiness: "{{ states('sensor.average_cloudiness_today') | float(0) }}"
+  avg_temperature: "{{ states('sensor.average_temperature_today') | float(0) }}"
+
+trigger:
+  - platform: time
+    at: !input trigger_time
+
+condition:
+  - condition: numeric_state
+    entity_id: sensor.average_cloudiness_today
+    above: !input cloud_threshold
+  - condition: numeric_state
+    entity_id: sensor.average_temperature_today
+    below: !input temp_threshold
+
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: !input boiler_switch
+mode: single
