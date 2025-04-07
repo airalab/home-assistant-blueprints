@@ -1,0 +1,31 @@
+blueprint:
+  name: Leak Sensor Notification Blueprint
+  description: >
+    This blueprint sends a notification when any selected leak sensor is triggered.
+    The notification message includes the friendly name (or entity ID) of the sensor.
+  domain: automation
+  input:
+    leak_sensors:
+      name: Leak Sensors
+      description: "Select the leak sensors to monitor."
+      selector:
+        entity:
+          domain: binary_sensor
+          multiple: true
+    notify_service:
+      name: Notification Service
+      description: "Choose the notification service to use."
+      default: notify.notify
+      selector:
+        action: {}
+
+trigger:
+  - platform: state
+    entity_id: !input leak_sensors
+    to: "on"
+
+action:
+  - service: !input notify_service
+    data:
+      message: >
+        Leak sensor "{{ trigger.to_state.attributes.friendly_name | default(trigger.entity_id) }}" has been activated!

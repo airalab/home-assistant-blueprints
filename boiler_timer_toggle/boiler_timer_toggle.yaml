@@ -1,0 +1,71 @@
+blueprint:
+  name: Boiler Timer Toggle Automation
+  description: >
+    When the trigger button is pressed, this automation checks the state of the boiler:
+    - If the boiler is off, it will turn on the boiler and start a timer for the specified duration.
+    - If the boiler is already on, it will turn off the boiler and cancel the timer.
+  domain: automation
+  input:
+    boiler_switch:
+      name: Boiler
+      description: The entity controlling the boiler switch.
+      selector:
+        entity:
+          domain: switch
+    timer_entity:
+      name: Timer
+      description: The timer entity.
+      selector:
+        entity:
+          domain: timer
+    trigger_entity:
+      name: Trigger (Button)
+      description: The entity that triggers the automation.
+      selector:
+        entity:
+          domain: input_boolean
+    duration:
+      name: Duration (in minutes)
+      description: The duration the boiler will run when turned on.
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 120
+          unit_of_measurement: minutes
+
+trigger:
+  - platform: state
+    entity_id: !input trigger_entity
+    to: "on"
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input boiler_switch
+            state: "off"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input boiler_switch
+          - service: timer.start
+            target:
+              entity_id: !input timer_entity
+            data:
+              duration: "00:{{ '{:02d}'.format(duration|int) }}:00"
+      - conditions:
+          - condition: state
+            entity_id: !input boiler_switch
+            state: "on"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: !input boiler_switch
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_entity
+  # Reset the trigger entity so it can be pressed again
+  - service: input_boolean.turn_off
+    target:
+      entity_id: !input trigger_entity
