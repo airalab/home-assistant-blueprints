@@ -1,32 +1,32 @@
 blueprint:
   name: Boiler Timer Toggle Automation
   description: >
-    When the trigger button is pressed, this automation checks the state of the boiler:
-    - If the boiler is off, it will turn on the boiler and start a timer for the specified duration.
-    - If the boiler is already on, it will turn off the boiler and cancel the timer.
+    This blueprint toggles the boiler based on a trigger button.
+    - If the boiler is off, it turns on and starts a timer for the specified duration.
+    - If the boiler is on, it turns off and cancels the timer.
   domain: automation
   input:
     boiler_switch:
-      name: Boiler
-      description: The entity controlling the boiler switch.
+      name: Boiler Switch
+      description: The switch entity that controls the boiler.
       selector:
         entity:
           domain: switch
     timer_entity:
       name: Timer
-      description: The timer entity.
+      description: Timer entity that handles countdown.
       selector:
         entity:
           domain: timer
     trigger_entity:
-      name: Trigger (Button)
-      description: The entity that triggers the automation.
+      name: Trigger Button
+      description: The input_boolean that acts as a button.
       selector:
         entity:
           domain: input_boolean
     duration:
-      name: Duration (in minutes)
-      description: The duration the boiler will run when turned on.
+      name: Duration (minutes)
+      description: How long the boiler should run when turned on.
       default: 60
       selector:
         number:
@@ -40,6 +40,9 @@ trigger:
     to: "on"
 
 action:
+  - variables:
+      run_minutes: !input duration
+
   - choose:
       - conditions:
           - condition: state
@@ -53,7 +56,9 @@ action:
             target:
               entity_id: !input timer_entity
             data:
-              duration: "00:{{ '{:02d}'.format(duration|int) }}:00"
+              duration: >
+                00:{{ '%02d' | format(run_minutes | int) }}:00
+
       - conditions:
           - condition: state
             entity_id: !input boiler_switch
@@ -65,7 +70,9 @@ action:
           - service: timer.cancel
             target:
               entity_id: !input timer_entity
-  # Reset the trigger entity so it can be pressed again
+
   - service: input_boolean.turn_off
     target:
       entity_id: !input trigger_entity
+
+mode: single
