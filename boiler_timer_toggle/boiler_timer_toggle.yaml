@@ -47,7 +47,7 @@ action:
   - variables:
       run_minutes: !input duration
       trigger_state: "{{ trigger.to_state.state if trigger.platform == 'state' else '' }}"
-      is_timer_finished: "{{ trigger.platform == 'event' and trigger.event.data.entity_id == (inputs.timer_entity | string) }}"
+      is_timer_finished: "{{ trigger.platform == 'event' and trigger.event.data.entity_id == timer_entity }}"
 
   - choose:
       # CASE 1: User turned ON the input_boolean
