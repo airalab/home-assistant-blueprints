@@ -1,9 +1,10 @@
 blueprint:
   name: Boiler Toggle with Timer
   description: >
-    This blueprint toggles a boiler and timer using an input_boolean.
-    - When input_boolean is turned ON: boiler turns ON and timer starts.
-    - When input_boolean is turned OFF: boiler turns OFF and timer is canceled.
+    Toggle a boiler and timer using an input_boolean.
+    - ON: Turns on the boiler and starts the timer.
+    - OFF: Turns off the boiler and cancels the timer.
+    - When the timer finishes, boiler and input_boolean turn OFF automatically.
   domain: automation
   input:
     boiler_switch:
@@ -14,13 +15,13 @@ blueprint:
           domain: switch
     timer_entity:
       name: Boiler Timer
-      description: The timer entity used for countdown.
+      description: Timer entity that tracks boiler duration.
       selector:
         entity:
           domain: timer
     trigger_entity:
       name: Trigger Button
-      description: The input_boolean used to toggle the boiler.
+      description: input_boolean used to toggle the boiler.
       selector:
         entity:
           domain: input_boolean
@@ -37,13 +38,19 @@ blueprint:
 trigger:
   - platform: state
     entity_id: !input trigger_entity
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
 
 action:
   - variables:
       run_minutes: !input duration
-      trigger_state: "{{ trigger.to_state.state }}"
+      trigger_state: "{{ trigger.to_state.state if trigger.platform == 'state' else '' }}"
+      is_timer_finished: "{{ trigger.platform == 'event' and trigger.event.data.entity_id == (inputs.timer_entity | string) }}"
 
   - choose:
+      # CASE 1: User turned ON the input_boolean
       - conditions:
           - condition: template
             value_template: "{{ trigger_state == 'on' }}"
@@ -58,6 +65,7 @@ action:
               duration: >
                 00:{{ '%02d' | format(run_minutes | int) }}:00
 
+      # CASE 2: User turned OFF the input_boolean
       - conditions:
           - condition: template
             value_template: "{{ trigger_state == 'off' }}"
@@ -68,5 +76,17 @@ action:
           - service: timer.cancel
             target:
               entity_id: !input timer_entity
+
+      # CASE 3: Timer finished
+      - conditions:
+          - condition: template
+            value_template: "{{ is_timer_finished }}"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: !input boiler_switch
+          - service: input_boolean.turn_off
+            target:
+              entity_id: !input trigger_entity
 
 mode: restart
