@@ -30,16 +30,20 @@ trigger:
   - platform: state
     entity_id: !input boiler_switch
 
+variables:
+  timer_entity_id: !input timer_entity
+
 action:
   - variables:
       trigger_state: "{{ trigger.to_state.state }}"
+      timer_state: "{{ states[timer_entity_id].state }}"
 
   - choose:
       # CASE 1: User turned ON the physical boiler
       - conditions:
           - condition: template
             value_template: >
-              {{ trigger_state == 'on' and states(timer_entity) != 'active' }}
+              {{ trigger_state == 'on' and timer_state != 'active' }}
         sequence:
           - service: input_boolean.turn_on
             target:
