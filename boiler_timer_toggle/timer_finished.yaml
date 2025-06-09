@@ -30,14 +30,11 @@ trigger:
     event_data:
       entity_id: !input timer_entity
 
-actions:
-  - action:
-      sequence:
-        - service: switch.turn_off
-          target:
-            entity_id: !input boiler_switch
-        - service: input_boolean.turn_off
-          target:
-            entity_id: !input trigger_entity
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: !input boiler_switch
+  - service: input_boolean.turn_off
+    target: !input trigger_entity
 
 mode: restart

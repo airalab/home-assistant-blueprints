@@ -58,18 +58,18 @@ action:
           - condition: template
             value_template: "{{ trigger_state == 'on' }}"
         sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: !input other_entities
-          - service: switch.turn_on
-            target:
-              entity_id: !input boiler_switch
+          - service: input_boolean.turn_off
+            target: !input other_entities
+          - delay: "00:00:01"
           - service: timer.start
             target:
               entity_id: !input timer_entity
             data:
               duration: >
                 00:{{ '%02d' | format(run_minutes | int) }}:00
+          - service: switch.turn_on
+            target:
+              entity_id: !input boiler_switch
 
       # CASE 2: User turned OFF the input_boolean
       - conditions:

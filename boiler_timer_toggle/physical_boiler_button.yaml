@@ -38,9 +38,10 @@ action:
       # CASE 1: User turned ON the physical boiler
       - conditions:
           - condition: template
-            value_template: "{{ trigger_state == 'on' }}"
+            value_template: >
+              {{ trigger_state == 'on' and states(timer_entity) != 'active' }}
         sequence:
-          - service: switch.turn_on
+          - service: input_boolean.turn_on
             target:
               entity_id: !input trigger_entity
 
@@ -49,6 +50,6 @@ action:
           - condition: template
             value_template: "{{ trigger_state == 'off' }}"
         sequence:
-          - service: timer.cancel
+          - service: timer.finish
             target:
               entity_id: !input timer_entity
