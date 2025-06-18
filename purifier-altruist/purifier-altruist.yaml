@@ -1,0 +1,60 @@
+blueprint:
+  name: Altruist Air Purifier Control
+  description: |
+    Controls an air purifier based on PM2.5 sensor values from an Altruist device.
+    Turns the fan on if PM2.5 > 10, sets fan level (max 17), and uses Favorite mode.
+    Turns the fan off when PM2.5 is 10 or lower.
+  domain: automation
+  input:
+    pm25_sensor:
+      name: PM2.5 Sensor
+      description: The PM2.5 sensor entity (e.g. altruist_purple_pm2_5)
+      selector:
+        entity:
+          domain: sensor
+    fan_entity:
+      name: Fan Entity
+      description: The fan to control
+      selector:
+        entity:
+          domain: fan
+    fan_level_entity:
+      name: Fan Level Number Entity
+      description: The number entity that sets the fan speed level
+      selector:
+        entity:
+          domain: number
+
+trigger:
+  - platform: state
+    entity_id: !input pm25_sensor
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input pm25_sensor
+            above: 10
+        sequence:
+          - service: fan.turn_on
+            target:
+              entity_id: !input fan_entity
+          - service: number.set_value
+            target:
+              entity_id: !input fan_level_entity
+            data:
+              value: >-
+                {{ [((states(pm25_sensor) | float - 10) * 17 / 40) | round(1), 17] | min }}
+          - service: fan.set_preset_mode
+            target:
+              entity_id: !input fan_entity
+            data:
+              preset_mode: Favorite
+    default:
+      - service: fan.turn_off
+        target:
+          entity_id: !input fan_entity
+
+mode: single
