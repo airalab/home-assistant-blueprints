@@ -8,19 +8,16 @@ blueprint:
   input:
     pm25_sensor:
       name: PM2.5 Sensor
-      description: The PM2.5 sensor entity (e.g. altruist_purple_pm2_5)
       selector:
         entity:
           domain: sensor
     fan_entity:
-      name: Fan Entity
-      description: The fan to control
+      name: Fan
       selector:
         entity:
           domain: fan
     fan_level_entity:
-      name: Fan Level Number Entity
-      description: The number entity that sets the fan speed level
+      name: Fan Level (Number)
       selector:
         entity:
           domain: number
@@ -29,14 +26,16 @@ trigger:
   - platform: state
     entity_id: !input pm25_sensor
 
+variables:
+  pm25_input: !input pm25_sensor
+
 condition: []
 
 action:
   - choose:
       - conditions:
-          - condition: numeric_state
-            entity_id: !input pm25_sensor
-            above: 10
+          - condition: template
+            value_template: "{{ int(states(pm25_input)) > 10 }}"
         sequence:
           - service: fan.turn_on
             target:
@@ -46,8 +45,7 @@ action:
               entity_id: !input fan_level_entity
             data:
               value: >-
-                {% set pm25 = states('!input pm25_sensor') | float %}
-                {% set raw = (pm25 - 10) * 17 / 40 %}
+                {% set raw = (float(states(pm25_input)) - 10) * 17 / 40 %}
                 {{ [raw, 17] | min | round(1) }}
           - service: fan.set_preset_mode
             target:
