@@ -46,7 +46,7 @@ action:
               entity_id: !input fan_level_entity
             data:
               value: >-
-                {{ [((states(pm25_sensor) | float - 10) * 17 / 40) | round(1), 17] | min }}
+                {{ [((states(inputs.pm25_sensor) | float - 10) * 17 / 40) | round(1), 17] | min }}
           - service: fan.set_preset_mode
             target:
               entity_id: !input fan_entity
