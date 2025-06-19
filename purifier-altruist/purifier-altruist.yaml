@@ -2,22 +2,29 @@ blueprint:
   name: Altruist Air Purifier Control
   description: |
     Controls an air purifier based on PM2.5 sensor values from an Altruist device.
-    Turns the fan on if PM2.5 > 10, sets fan level (max 17), and uses Favorite mode.
-    Turns the fan off when PM2.5 is 10 or lower.
+    Turns the fan on if PM > PM Treshold, sets fan level (max 17), and uses Favorite mode.
+    Turns the fan off when PM is equal to PM Treshold or lower.
   domain: automation
   input:
     pm25_sensor:
-      name: PM2.5 Sensor
+      name: PM Sensor
       selector:
         entity:
           domain: sensor
+    pm_treshold:
+      name: PM Treshold
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: ppm
     fan_entity:
       name: Fan
       selector:
         entity:
           domain: fan
     fan_level_entity:
-      name: Fan Level (Number)
+      name: Fan Level (Favorite Level) entity
       selector:
         entity:
           domain: number
@@ -28,6 +35,7 @@ trigger:
 
 variables:
   pm25_input: !input pm25_sensor
+  pm_treshold_input: !input pm_treshold
 
 condition: []
 
@@ -35,7 +43,7 @@ action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ int(states(pm25_input)) > 10 }}"
+            value_template: "{{ int(states(pm25_input)) > pm_treshold_input }}"
         sequence:
           - service: fan.turn_on
             target:
@@ -45,7 +53,7 @@ action:
               entity_id: !input fan_level_entity
             data:
               value: >-
-                {% set raw = (float(states(pm25_input)) - 10) * 17 / 40 %}
+                {% set raw = (float(states(pm25_input)) - pm_treshold_input) * 17 / 40 %}
                 {{ [raw, 17] | min | round(1) }}
           - service: fan.set_preset_mode
             target:
