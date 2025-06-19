@@ -1,0 +1,59 @@
+blueprint:
+  name: Physical boiler button
+  description: >
+    Toggle The virtual boiler button and timer when press physical button.
+    - ON: Turns on the virtual boiler.
+    - OFF: Turns off the timer.
+    You should choose the max time virtual boiler button.
+  domain: automation
+  input:
+    boiler_switch:
+      name: Boiler Switch
+      description: The physical switch that turns the boiler on/off.
+      selector:
+        entity:
+          domain: switch
+    timer_entity:
+      name: Boiler Timer
+      description: Timer entity that tracks boiler duration.
+      selector:
+        entity:
+          domain: timer
+    trigger_entity:
+      name: Trigger Button
+      description: virtual button which will be triggered.
+      selector:
+        entity:
+          domain: input_boolean
+
+trigger:
+  - platform: state
+    entity_id: !input boiler_switch
+
+variables:
+  timer_entity_id: !input timer_entity
+
+action:
+  - variables:
+      trigger_state: "{{ trigger.to_state.state }}"
+      timer_state: "{{ states[timer_entity_id].state }}"
+
+  - choose:
+      # CASE 1: User turned ON the physical boiler
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_state == 'on' and timer_state != 'active' }}
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: !input trigger_entity
+
+      # CASE 2: User turned OFF the physical boiler
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger_state == 'off' }}"
+        sequence:
+          - service: timer.finish
+            target:
+              entity_id: !input timer_entity

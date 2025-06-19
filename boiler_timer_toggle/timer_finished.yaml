@@ -1,0 +1,40 @@
+blueprint:
+  name: Boiler timer finish actions
+  description: >
+    When timer finish, it turn off the boiler and all virtual buttons
+  domain: automation
+  input:
+    boiler_switch:
+      name: Boiler Switch
+      description: The switch that turns the boiler on/off.
+      selector:
+        entity:
+          domain: switch
+    timer_entity:
+      name: Boiler Timer
+      description: Timer entity that tracks boiler duration.
+      selector:
+        entity:
+          domain: timer
+    trigger_entity:
+      name: all Trigger Buttons
+      description: all virtual boiler buttons.
+      selector:
+        target:
+          entity:
+            domain: input_boolean
+
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: !input boiler_switch
+  - service: input_boolean.turn_off
+    target: !input trigger_entity
+
+mode: restart
