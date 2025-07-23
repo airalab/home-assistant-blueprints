@@ -1,0 +1,100 @@
+blueprint:
+  name: Sensor Value to RGB Light Color
+  description: >
+    Changes the color of RGB lights to green, yellow, or red depending on the numeric sensor value.
+    You can configure threshold values and brightness.
+  domain: automation
+  input:
+    sensor:
+      name: Numeric Sensor
+      description: A sensor with numeric values (e.g. temperature, CO2 level)
+      selector:
+        entity:
+          domain: sensor
+    rgb_lights:
+      name: RGB Light(s)
+      description: One or more RGB lights
+      selector:
+        target:
+          entity:
+            domain: light
+    green_threshold:
+      name: Green Max Value
+      description: Max value (inclusive) for green
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 1
+          mode: box
+    yellow_threshold:
+      name: Yellow Max Value
+      description: Max value (inclusive) for yellow
+      default: 120
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 1
+          mode: box
+    brightness:
+      name: Brightness (%)
+      description: Brightness of the RGB light (1–100%)
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+
+trigger:
+  - platform: state
+    entity_id: !input sensor
+
+variables:
+  sensor_entity: !input sensor
+  green_max: !input green_threshold
+  yellow_max: !input yellow_threshold
+  brightness_value: !input brightness
+
+condition: []
+
+action:
+  - variables:
+      sensor_value: "{{ states(sensor_entity) | float(0) }}"
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ sensor_value <= green_max }}"
+        sequence:
+          - service: light.turn_on
+            target: !input rgb_lights
+            data:
+              rgb_color: [0, 255, 0]
+              brightness_pct: "{{ brightness_value }}"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ sensor_value > green_max and sensor_value <= yellow_max }}"
+        sequence:
+          - service: light.turn_on
+            target: !input rgb_lights
+            data:
+              rgb_color: [255, 255, 0]
+              brightness_pct: "{{ brightness_value }}"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ sensor_value > yellow_max }}"
+        sequence:
+          - service: light.turn_on
+            target: !input rgb_lights
+            data:
+              rgb_color: [255, 0, 0]
+              brightness_pct: "{{ brightness_value }}"
+
+mode: restart
