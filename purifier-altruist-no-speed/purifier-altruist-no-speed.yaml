@@ -1,0 +1,52 @@
+blueprint:
+  name: Altruist Air Purifier Control with no Fan Speed
+  description: |
+    Controls an air purifier based on PM2.5 sensor values from an Altruist device.
+    Turns the fan on if PM > PM Treshold, sets fan level (max 17), and uses Favorite mode.
+    Turns the fan off when PM is equal to PM Treshold or lower.
+  domain: automation
+  input:
+    pm25_sensor:
+      name: PM Sensor
+      selector:
+        entity:
+          domain: sensor
+    pm_treshold:
+      name: PM Treshold
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: ppm
+      default: 10
+    fan_entity:
+      name: Fan
+      selector:
+        entity:
+          domain: fan
+
+trigger:
+  - platform: state
+    entity_id: !input pm25_sensor
+
+variables:
+  pm25_input: !input pm25_sensor
+  pm_treshold_input: !input pm_treshold
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ int(states(pm25_input)) > pm_treshold_input }}"
+        sequence:
+          - service: fan.turn_on
+            target:
+              entity_id: !input fan_entity
+    default:
+      - service: fan.turn_off
+        target:
+          entity_id: !input fan_entity
+
+mode: single
