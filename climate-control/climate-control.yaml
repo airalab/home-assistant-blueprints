@@ -66,7 +66,7 @@ action:
         then:
           - service: climate.set_temperature
             data:
-              temperature: target_temp
+              temperature: "{{ target_temp | float }}"
               hvac_mode: cool
             target: !input 'climate_entity'
         else:
@@ -76,7 +76,7 @@ action:
             then:
               - service: climate.set_temperature
                 data:
-                  temperature: target_temp
+                  temperature: "{{ target_temp | float }}"
                   hvac_mode: heat
                 target: !input 'climate_entity'
             else:
@@ -95,7 +95,7 @@ action:
             then:
               - service: climate.set_temperature
                 data:
-                  temperature: target_temp
+                  temperature: "{{ target_temp | float }}"
                   hvac_mode: cool
                 target: !input 'climate_entity'
             else:
@@ -105,7 +105,7 @@ action:
                 then:
                   - service: climate.set_temperature
                     data:
-                      temperature: target_temp
+                      temperature: "{{ target_temp | float }}"
                       hvac_mode: heat
                     target: !input 'climate_entity'
                 else:
@@ -119,7 +119,7 @@ action:
             then:
               - service: climate.set_temperature
                 data:
-                  temperature: target_temp
+                  temperature: "{{ target_temp | float }}"
                   hvac_mode: cool
                 target: !input 'climate_entity'
             else:
@@ -129,7 +129,7 @@ action:
                 then:
                   - service: climate.set_temperature
                     data:
-                      temperature: target_temp
+                      temperature: "{{ target_temp | float }}"
                       hvac_mode: heat
                     target: !input 'climate_entity'
                 else:
