@@ -64,8 +64,9 @@ action:
           - condition: template
             value_template: "{{ states( temp_sensor ) | float  > ( target_temp - hysteresis / 2 ) | float }}"
         then:
-          - service: climate.set_hvac_mode
+          - service: climate.set_temperature
             data:
+              temperature: target_temp
               hvac_mode: cool
             target: !input 'climate_entity'
         else:
@@ -73,8 +74,9 @@ action:
               - condition: template
                 value_template: "{{ states( temp_sensor ) | float < ( target_temp - hysteresis ) | float }}"
             then:
-              - service: climate.set_hvac_mode
+              - service: climate.set_temperature
                 data:
+                  temperature: target_temp
                   hvac_mode: heat
                 target: !input 'climate_entity'
             else:
@@ -91,8 +93,9 @@ action:
               - condition: template
                 value_template: "{{ states( temp_sensor ) | float > ( target_temp + hysteresis ) | float }}"
             then:
-              - service: climate.set_hvac_mode
+              - service: climate.set_temperature
                 data:
+                  temperature: target_temp
                   hvac_mode: cool
                 target: !input 'climate_entity'
             else:
@@ -100,8 +103,9 @@ action:
                   - condition: template
                     value_template: "{{ states( temp_sensor ) | float < ( target_temp + hysteresis / 2 ) | float }}"
                 then:
-                  - service: climate.set_hvac_mode
+                  - service: climate.set_temperature
                     data:
+                      temperature: target_temp
                       hvac_mode: heat
                     target: !input 'climate_entity'
                 else:
@@ -113,8 +117,9 @@ action:
               - condition: template
                 value_template: "{{ states( temp_sensor ) | float > ( target_temp + hysteresis ) | float }}"
             then:
-              - service: climate.set_hvac_mode
+              - service: climate.set_temperature
                 data:
+                  temperature: target_temp
                   hvac_mode: cool
                 target: !input 'climate_entity'
             else:
@@ -122,8 +127,9 @@ action:
                   - condition: template
                     value_template: "{{ states( temp_sensor ) | float < ( target_temp - hysteresis ) | float }}"
                 then:
-                  - service: climate.set_hvac_mode
+                  - service: climate.set_temperature
                     data:
+                      temperature: target_temp
                       hvac_mode: heat
                     target: !input 'climate_entity'
                 else:
