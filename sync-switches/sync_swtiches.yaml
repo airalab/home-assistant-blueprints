@@ -1,55 +1,77 @@
 blueprint:
-  name: Sync switches
-  description: Ensure a group of switches are synchronized to the ON/OFF state.
+  name: Sync switches (fixed)
+  description: >-
+    Keeps a group of switches/lights in the same state, in both directions:
+    toggling any one of them propagates to the rest. A group helper cannot do
+    this — it only drives top-down, so pressing a physical wall switch is not
+    reflected on the others.
+
+    Fixed version of airalab/sync_swtiches.yaml. The original triggered on
+    `event_type: state_changed` — that is, ANY state change of ANY entity in the
+    whole Home Assistant — and filtered "mine / not mine" in conditions, i.e.
+    already inside the run. With `mode: single`, a new trigger was dropped while
+    the previous run was still going. On a site with hundreds of entities the
+    bus is never idle, so real button presses were regularly discarded with
+    "Already running". It looked like "sometimes it just doesn't work" and got
+    blamed on radio/connectivity.
+
+    Here the trigger is `state` on the selected entities only (the bus is no
+    longer touched) and `mode: queued`. No filter conditions and no templates
+    are left.
   domain: automation
-  source_url: https://github.com/airalab/home-assistant-blueprints/blob/main/sync-switches/sync_swtiches.yaml
   input:
     switches:
-      name: Targets
-      description: List of switches to sync to the ON position.
+      name: Entities to sync
+      description: >-
+        Switches and/or lights to keep in the same state. At least two.
       selector:
-        target:
-          entity:
-            domain: 
-              - switch
-              - light
-variables:
-  var_targets: !input switches
-  
-trigger:
-    - platform: event
-      event_type: state_changed
-    
-condition:
-  - condition: template
-    value_template: "{{ trigger.event.data is defined }}"
+        entity:
+          multiple: true
+          filter:
+            - domain: switch
+            - domain: light
 
-  - condition: template
-    value_template: "{{ trigger.event.data.entity_id in var_targets.entity_id }}"
+# queued, not single: presses arriving while a previous run is in progress are
+# queued instead of dropped. This is the actual fix.
+mode: queued
+max: 10
 
-  - condition: template
-    value_template: "{{ trigger.event.context.parent_id is none or trigger.event.data.old_state.context.parent_id == trigger.event.data.new_state.context.parent_id }}"
+triggers:
+  # not_from filters out the return from unavailable/unknown — otherwise every
+  # group would fire at once after a Home Assistant restart or a device
+  # reconnect.
+  - trigger: state
+    entity_id: !input switches
+    to: "on"
+    not_from:
+      - unknown
+      - unavailable
+    id: turned_on
+  - trigger: state
+    entity_id: !input switches
+    to: "off"
+    not_from:
+      - unknown
+      - unavailable
+    id: turned_off
 
-action:
+actions:
   - choose:
       - conditions:
-          - condition: template
-            value_template: >
-              {{ trigger.event.data.new_state.state == 'on' }}
+          - condition: trigger
+            id: turned_on
         sequence:
-          - service: homeassistant.turn_on
+          # The command targets the whole group, including the entity that
+          # triggered it: idempotent, and shorter than subtracting it with
+          # reject. No loop — turning on an already-on entity produces no state
+          # change, so the chain stops at the second hop.
+          - action: homeassistant.turn_on
             target:
-              entity_id: >
-                {{ var_targets.entity_id | reject('equalto', trigger.event.data.entity_id) | list }}
+              entity_id: !input switches
       - conditions:
-          - condition: template
-            value_template: >
-              {{ trigger.event.data.new_state.state == 'off' }}
+          - condition: trigger
+            id: turned_off
         sequence:
-          - service: homeassistant.turn_off
+          - action: homeassistant.turn_off
             target:
-              entity_id: >
-                {{ var_targets.entity_id | reject('equalto', trigger.event.data.entity_id) | list }}
-
-     
-mode: single
+              entity_id: !input switches
