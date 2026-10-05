@@ -32,7 +32,7 @@ blueprint:
     off) — but the context guard is cheap insurance against the blueprint
     ever contributing a self-reinforcing chain on flaky hardware.
   domain: automation
-  source_url: https://github.com/nakata5321/home-assistant-blueprints/blob/main/sync-switches/sync_swtiches.yaml
+  source_url: https://github.com/airalab/home-assistant-blueprints/blob/main/sync-switches/sync_swtiches.yaml
   input:
     switches:
       name: Entities to sync
