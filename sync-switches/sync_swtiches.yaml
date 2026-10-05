@@ -1,55 +1,109 @@
 blueprint:
-  name: Sync switches
-  description: Ensure a group of switches are synchronized to the ON/OFF state.
+  name: Sync switches (fixed)
+  description: >-
+    Keeps a group of switches/lights in the same state, in both directions:
+    toggling any one of them propagates to the rest. A group helper cannot do
+    this — it only drives top-down, so pressing a physical wall switch is not
+    reflected on the others.
+
+    Fixed version of airalab/sync_swtiches.yaml. The original triggered on
+    `event_type: state_changed` — that is, ANY state change of ANY entity in
+    the whole Home Assistant — and filtered "mine / not mine" in conditions,
+    i.e. already inside the run. With `mode: single`, a new trigger was
+    dropped while the previous run was still going. On a site with hundreds
+    of entities the bus is never idle, so real button presses were regularly
+    discarded with "Already running". It looked like "sometimes it just
+    doesn't work" and got blamed on radio/connectivity.
+
+    v2: the trigger is `state` on the selected entities only (the bus is no
+    longer touched). The action excludes the entity that just triggered from
+    the re-broadcast target, `max` is capped at 3, and a context guard
+    (ported from the original blueprint's third condition, rewritten for the
+    native `state` trigger) skips the run entirely when the triggering state
+    was itself caused by this blueprint's own previous action — one physical
+    press now produces exactly one hop of propagation, not a chain of
+    self-reinforcing runs.
+
+    Observed in the field: residence-28-block-b-401, 2026-10-01 — a 4-member
+    group produced a sustained real on/off storm (hundreds of genuine relay
+    toggles, 30–90s) from one press. Traced to the Zigbee/coordinator level,
+    not this blueprint (automation traces showed only 5 runs in under half a
+    second while the storm ran for another 80+ seconds with automations
+    off) — but the context guard is cheap insurance against the blueprint
+    ever contributing a self-reinforcing chain on flaky hardware.
   domain: automation
   source_url: https://github.com/airalab/home-assistant-blueprints/blob/main/sync-switches/sync_swtiches.yaml
   input:
     switches:
-      name: Targets
-      description: List of switches to sync to the ON position.
+      name: Entities to sync
+      description: >-
+        Switches and/or lights to keep in the same state. At least two.
       selector:
-        target:
-          entity:
-            domain: 
-              - switch
-              - light
+        entity:
+          multiple: true
+          filter:
+            - domain: switch
+            - domain: light
+
+# queued, not single: presses arriving while a previous run is in progress
+# are queued instead of dropped. max: 3 bounds how long a storm can
+# self-sustain if the hardware doesn't settle cleanly between commands.
+mode: queued
+max: 3
+
 variables:
-  var_targets: !input switches
-  
-trigger:
-    - platform: event
-      event_type: state_changed
-    
-condition:
-  - condition: template
-    value_template: "{{ trigger.event.data is defined }}"
+  sync_switches: !input switches
 
-  - condition: template
-    value_template: "{{ trigger.event.data.entity_id in var_targets.entity_id }}"
+triggers:
+  # not_from filters out the return from unavailable/unknown — otherwise
+  # every group would fire at once after a Home Assistant restart or a
+  # device reconnect.
+  - trigger: state
+    entity_id: !input switches
+    to: "on"
+    not_from:
+      - unknown
+      - unavailable
+    id: turned_on
+  - trigger: state
+    entity_id: !input switches
+    to: "off"
+    not_from:
+      - unknown
+      - unavailable
+    id: turned_off
 
-  - condition: template
-    value_template: "{{ trigger.event.context.parent_id is none or trigger.event.data.old_state.context.parent_id == trigger.event.data.new_state.context.parent_id }}"
-
-action:
+actions:
   - choose:
       - conditions:
+          - condition: trigger
+            id: turned_on
+          # Context guard: skip entirely if this state was caused by our own
+          # previous action (its context chains back to the same parent as
+          # before), instead of just excluding it from the target below.
+          # Ported from airalab/sync_swtiches.yaml's third condition, which
+          # used the raw state_changed event; here via the native state
+          # trigger's to_state/from_state.
           - condition: template
-            value_template: >
-              {{ trigger.event.data.new_state.state == 'on' }}
+            value_template: >-
+              {{ trigger.to_state.context.parent_id is none or
+                 trigger.from_state.context.parent_id ==
+                 trigger.to_state.context.parent_id }}
         sequence:
-          - service: homeassistant.turn_on
+          # Exclude the entity that just triggered: re-commanding it is
+          # redundant by design.
+          - action: homeassistant.turn_on
             target:
-              entity_id: >
-                {{ var_targets.entity_id | reject('equalto', trigger.event.data.entity_id) | list }}
+              entity_id: "{{ sync_switches | reject('equalto', trigger.entity_id) | list }}"
       - conditions:
+          - condition: trigger
+            id: turned_off
           - condition: template
-            value_template: >
-              {{ trigger.event.data.new_state.state == 'off' }}
+            value_template: >-
+              {{ trigger.to_state.context.parent_id is none or
+                 trigger.from_state.context.parent_id ==
+                 trigger.to_state.context.parent_id }}
         sequence:
-          - service: homeassistant.turn_off
+          - action: homeassistant.turn_off
             target:
-              entity_id: >
-                {{ var_targets.entity_id | reject('equalto', trigger.event.data.entity_id) | list }}
-
-     
-mode: single
+              entity_id: "{{ sync_switches | reject('equalto', trigger.entity_id) | list }}"
